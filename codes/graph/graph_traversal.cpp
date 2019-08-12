@@ -2,6 +2,7 @@
 #include<memory>
 #include<list>
 #include<stack>
+#include<queue>
 using namespace std;
 
 //有向无权图
@@ -47,6 +48,33 @@ public:
         }
     }
 
+    void breadthFirstSearch(int vertex) {
+        bool visited[this->numVertices];
+        for (auto i = 0; i < this->numVertices; ++i) {
+            visited[i] = false;
+        }
+
+        queue<int> m_queue;
+        m_queue.push(vertex);
+        while(!m_queue.empty()) {
+            auto v = m_queue.front();
+            if (visited[v]) {
+                m_queue.pop();
+                continue;
+            }
+
+            visit(v);
+            visited[v] = true;
+            m_queue.pop();
+
+            for (auto it = this->adjLists[v].begin(); it != this->adjLists[v].end(); ++it) {
+                if (!visited[*it]) {
+                    m_queue.push(*it);
+                }
+            }
+        }
+    }
+
     void print() {
         for (int i = 0; i < numVertices; ++i) {
             cout << i << " : ";
@@ -77,9 +105,10 @@ void test_traversal() {
     g.addEdge(0,3);
     g.addEdge(1,2);
     g.addEdge(2,4);
-    g.print();
 
     g.depthFirstSearch(0);
+    cout << endl;
+    g.breadthFirstSearch(0);
 }
 
 int main() {

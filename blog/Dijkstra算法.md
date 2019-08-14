@@ -26,7 +26,9 @@
 23      return dist[], prev[]
 ```
 可以看到Dijkstra算法核心思想是每次都从距离值最短的顶点开始探索最短路径，从当前顶点探索更新完自己的邻接节点后，如果发现有其他顶点的距离值更小，则跳至那个顶点，继续探索，直到所有顶点都被处理过。其算法过程可参考下图：
-![image](https://user-gold-cdn.xitu.io/2019/8/14/16c8db6cb73a3e1c?w=283&h=222&f=gif&s=9051)
+
+![image](https://upload.wikimedia.org/wikipedia/commons/5/57/Dijkstra_Animation.gif)
+
 上面会计算出源结点到其他结点的最短距离，如果是要获得源节点到目的节点之间的最短路径，伪代码如下：
 ```
 1  S ← empty sequence

@@ -3,12 +3,31 @@
 #include <cassert>
 #include<vector>
 #include<list>
+#include<queue>
 #include<iostream>
 #include<utility> 
 #include<climits>
 #include<algorithm>
 using namespace std;
 
+class Vertex {
+public:
+    Vertex(int v, int d = INT_MAX):vertex(v),distance(d){}
+    Vertex(const Vertex& v) {
+        this->vertex = v.vertex;
+        this->distance = v.distance;
+    }
+    void setDistance(int d) {
+        this->distance = d;
+    }
+
+    int vertex;
+    int distance;
+
+    bool operator< (const Vertex &v) const {
+        return this->distance > v.distance;
+    }
+};
 
 // 无向有权（非负值）图
 class Graph {
@@ -36,7 +55,8 @@ public:
 
     list<int> dijkstraShortestPath(int src, int dst) {
         assert(src != dst);
-        vector<int> prev = dijkstra(src);
+        // vector<int> prev = dijkstra(src);
+        vector<int> prev = dijkstra_priority_queue(src);        
         list<int> path;
         int u = dst;
         if (prev[u] != -1) {
@@ -49,6 +69,7 @@ public:
         return path;
     }
 
+    // dijkstra经典实现
     vector<int> dijkstra(int source) {
         vector<int> prev;
         vector<int> dist;
@@ -70,6 +91,46 @@ public:
                 if (alt < dist[*it]) {
                     dist[*it] = alt;
                     prev[*it] = u;
+                }
+            }
+        }
+
+        // 打印距离值
+        for (int i = 0; i < numVertices; ++i) {
+            cout << i << " : " << dist[i] << endl;
+        }
+
+         return prev;
+    }
+
+    // dijkstra优先队列实现
+    vector<int> dijkstra_priority_queue(int source) {
+        priority_queue<Vertex> pq;
+        vector<int> dist;
+        vector<int> prev;
+        for (int i = 0; i < this->numVertices; ++i) {
+            if (i != source) {
+                dist.push_back(INT_MAX);
+            } else {
+                dist.push_back(0);
+            }
+
+            prev.push_back(-1);
+        }
+
+        Vertex vsrc(source, 0);
+        pq.push(vsrc);
+        while (!pq.empty()) {
+            Vertex u(pq.top());
+            pq.pop();          
+            vector<int> neighbor = neighbor_vertices(u.vertex);
+  
+            for (auto it = neighbor.begin(); it != neighbor.end(); ++it) {
+                int alt = dist[u.vertex] + distance(u.vertex, *it);
+                if (alt < dist[*it]) {
+                    dist[*it] = alt;
+                    prev[*it] = u.vertex;
+                    pq.push(Vertex(*it, alt));
                 }
             }
         }
@@ -167,7 +228,8 @@ void test() {
     g.addEdge(3, 4, 4); 
     g.print();
 
-    vector<int> prev = g.dijkstra(0);
+    // vector<int> prev = g.dijkstra(0);
+    // vector<int> prev = g.dijkstra_priority_queue(0);
     list<int> path = g.dijkstraShortestPath(0, 4);
     cout << "path: ";
     for (auto it = path.begin(); it != path.end(); ++it) {

@@ -1,3 +1,5 @@
+// 图的邻接链表表示
+
 #include<iostream>
 #include<list>
 using namespace std;

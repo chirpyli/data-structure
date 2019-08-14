@@ -1,3 +1,5 @@
+// 图的邻接矩阵表示
+
 #include<iostream>
 using namespace std;
 

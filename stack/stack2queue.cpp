@@ -33,7 +33,7 @@ public:
 		return m_stackA.empty() && m_stackB.empty();
 	}
 
-	T top() {
+	T& top() {
 		if(m_stackB.empty()) {
 			while(!m_stackA.empty()) {
 				m_stackB.push(m_stackA.top());

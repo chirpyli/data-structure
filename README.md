@@ -1,2 +1,2 @@
 # data-structure
-Data structure learning notes and codes.
+Data structure and algorithm learning notes and codes.

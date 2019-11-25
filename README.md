@@ -6,8 +6,9 @@ Data structure and algorithm learning notes and codes.
 
 
 ## List
+- [链表](./链表.md)
 - [跳跃链表](./list/跳跃链表.md)
-
+- [稀疏表](./稀疏表.md)
 
 ## Stack
 - [栈的实现](./stack/栈的实现.md)

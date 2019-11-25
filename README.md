@@ -4,7 +4,10 @@ Data structure and algorithm learning notes and codes.
 ## Array
  - [数组](./array/数组.md)
 
+
 ## List
+- [跳跃链表](./list/跳跃链表.md)
+
 
 ## Stack
 - [栈的实现](./stack/栈的实现.md)

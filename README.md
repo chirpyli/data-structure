@@ -23,7 +23,7 @@ Data structure and algorithm learning notes and codes.
 
 ## Tree
 - [二叉查找树](./tree/二叉查找树.md)
-
+- [线索树](./tree/线索树.md)
 
 
 ## Graph

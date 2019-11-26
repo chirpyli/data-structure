@@ -20,6 +20,12 @@ Data structure and algorithm learning notes and codes.
 - [队列的实现](./queue/队列的实现.md)
 - [循环队列](./queue/循环队列.md)
 
+
+## Tree
+- [二叉查找树](./tree/二叉查找树.md)
+
+
+
 ## Graph
 - [图的表示与遍历](./graph/图的遍历与表示.md)
 - [Dijkstra算法](./graph/Dijkstra算法.md)

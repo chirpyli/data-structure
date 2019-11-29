@@ -78,10 +78,11 @@ public:
 	void postorder() {//深度遍历之后序树遍历
 		postorder(root);
 	}
-	void iterativePreorder();	//深度遍历之前序树遍历
-	void iterativeInorder();	//深度遍历之中序树遍历
-	void iterativePostorder();	//深度遍历之后序树遍历
-	void breadthFirst();		//广度优先遍历
+	void iterativePreorder();	// 深度遍历之前序树遍历
+	void iterativeInorder();	// 深度遍历之中序树遍历
+	void iterativePostorder();	// 深度遍历之后序树遍历
+	void breadthFirst();		// 广度优先遍历
+    void morrisInorder();       // Morris算法中序遍历
 
 	const T& findMin()const;	// 查找最小值，并返回最小值
     const T &findMax() const;	// 查找最大值，并返回最大值
@@ -103,6 +104,33 @@ protected:
 	Node<T>* findMax_loop(Node<T>* t) const;		//循环方式实现
 	void remove(const T&x,Node<T>*& t) const;
 };
+
+
+// 中序遍历Morris算法实现
+template<class T>
+void BST<T>::morrisInorder() {
+	Node<T>* p = root;
+	Node<T>* tmp;
+	while (p != NULL) {
+		if (p->left == 0) {		// 如果当前节点的左孩子为空，打印当前节点，然后进入右孩子
+			visit(p);
+			p = p->right;
+		} else {
+			tmp = p->left;		// 根据当前节点，找到其前序节点(左子树最右节点)，然后进入当前节点的左孩子。
+			while (tmp->right != 0 && tmp->right != p)
+				tmp = tmp->right;
+			if (tmp->right == NULL) {	// 如果前序节点的右孩子是空，那么把前序节点的右孩子指向当前节点
+				tmp->right = p;
+				p = p->left;
+			} else {		// 如果当前节点的前序节点其右孩子指向了它本身，那么把前序节点的右孩子设置为空，打印当前节点，然后进入右孩子。
+				visit(p);
+				tmp->right = 0;
+				p = p->right;
+			}
+		}
+	}
+
+} 
 
 //根据数组中的内容构造树
 template<class T>
@@ -317,6 +345,8 @@ void BST<T>::iterativeInorder() {
 	}
 }
 
+
+
 //这段代码是实现查找最大值和最小值的代码
 /*思路：我们可以从root节点开始：
     一直沿着左节点往下找，直到子节点等于NULL为止，这样就可以找到最小值了；
@@ -382,4 +412,14 @@ template<class T>
 const T& BST<T>::findMax() const {
 	Node<T>* p=findMax(root);
 	return p->data;
+}
+
+int main() {
+	int data[6] = {8, 3, 10, 1, 4, 6};
+	BST<int> *t = new BST<int>(data, 6);
+	// t->breadthFirst();
+	// t->inorder();
+	t->morrisInorder();
+
+	return 0;
 }

@@ -1,6 +1,9 @@
 // 通用二叉查找树的实现代码
+
+#pragma once
 #include<iostream>
 #include<list>
+#include<cassert>
 #include<stack>
 #include<queue>
 using namespace std;
@@ -42,12 +45,13 @@ public:
 	Node* right;
 };
 
+
 //二叉查找树的实现类
 template<class T>
 class BST {
 public:
-	BST():root(NULL){}
-	BST(T* a, int len);	//根据数组中的数据构造树，调试测试用
+	BST():root(NULL),count(0) {}
+	BST(T* a, int len, bool balance = false);	//根据数组中的数据构造树，调试测试用
 	~BST() {
 		clear();
 	}
@@ -59,9 +63,10 @@ public:
 		root = NULL;
 	}
 	void insert(const T&);		//插入
-	void remove(const T &x);	// 删除二叉查找树中指定的值
+	bool remove(const T &x);	// 删除二叉查找树中指定的值
 	void recursiveInsert(const T& el) {
 		recursiveInsert(root, el);
+        ++count;
 	}
 	Node<T>* search(const T& el) const {	//查找
 		return search(root, el);
@@ -88,6 +93,7 @@ public:
     const T &findMax() const;	// 查找最大值，并返回最大值
 protected:
 	Node<T>* root; //根节点
+    int count;
 	void clear(Node<T>*);
 	void recursiveInsert(Node<T>*&, const T&);	
 	Node<T>* search(Node<T>*, const T&) const;
@@ -102,9 +108,10 @@ protected:
 	Node<T>* findMax(Node<T>* t) const;		//迭代方式实现
 	Node<T>* findMin_loop(Node<T>* t) const;		//循环方式实现
 	Node<T>* findMax_loop(Node<T>* t) const;		//循环方式实现
-	void remove(const T&x,Node<T>*& t) const;
-};
+	bool remove(const T&x,Node<T>*& t) const;
 
+	void balance(T* data, int first, int last);		// 初始构建平衡树
+};
 
 // 中序遍历Morris算法实现
 template<class T>
@@ -134,12 +141,28 @@ void BST<T>::morrisInorder() {
 
 //根据数组中的内容构造树
 template<class T>
-BST<T>::BST(T* a, int len) {
+BST<T>::BST(T* a, int len, bool balance) {
+	assert(a != NULL);
 	root = NULL;
-	for (int i = 0; i < len; i++) {
-		insert(a[i]);
+	if (balance == true) {
+		this->balance(a, 0, len - 1);
+	} else {
+		for (int i = 0; i < len; i++) {
+			insert(a[i]);
+		}
 	}
 }
+
+template<class T>
+void BST<T>::balance(T* data, int first, int last) {
+	if (first <= last) {
+		int middle = (first + last) >> 1;
+		this->insert(data[middle]);
+		balance(data, first, middle - 1);
+		balance(data, middle + 1, last);
+	}
+}
+
 
 //清除节点p及其子节点
 template<class T>
@@ -149,6 +172,7 @@ void BST<T>::clear(Node<T> *p) {
 		clear(p->right);
 		delete p;
 	}
+    count = 0;
 }
 
 //插入，非递归形式
@@ -166,6 +190,8 @@ void BST<T>::insert(const T& el) {
 	else if (el < prev->data)
 		prev->left = new Node<T>(el);
 	else prev->right = new Node<T>(el);
+
+    ++count;
 }
 
 //插入，递归实现
@@ -205,9 +231,9 @@ Node<T>* BST<T>::recursiveSearch(Node<T>* p, const T& el) const {
 
 // 这里采用的方法一，选择右子树中最小值节点
 template<class T>
-void BST<T>::remove(const T& x, Node<T>* &t) const {
+bool BST<T>::remove(const T& x, Node<T>* &t) const {
 	if(NULL == t)
-		return;
+		return false;
 	// 移除一个节点稍微麻烦一点，因为移除一个节点后二叉树需要将移除的位置再填一个节点过去
 	if(x < t->data) {
 		remove(x, t->left);
@@ -227,12 +253,19 @@ void BST<T>::remove(const T& x, Node<T>* &t) const {
 		t = (t->left != NULL)?t->left:t->right;//用其子节点占据删除掉的位置；
 		delete p;//直接删除对应的节点
 	}
+
+    return true;
 }
 
 //删除指定元素
 template<class T>
-void BST<T>::remove(const T& x) {
-	remove(x, root);
+bool BST<T>::remove(const T& x) {
+	bool r = remove(x, root);
+    if (r == true) {
+        --count;
+    }
+
+    return r;
 }
 
 //广度优先遍历（从上到下，从左到右，一层一层的向下访问）
@@ -412,14 +445,4 @@ template<class T>
 const T& BST<T>::findMax() const {
 	Node<T>* p=findMax(root);
 	return p->data;
-}
-
-int main() {
-	int data[6] = {8, 3, 10, 1, 4, 6};
-	BST<int> *t = new BST<int>(data, 6);
-	// t->breadthFirst();
-	// t->inorder();
-	t->morrisInorder();
-
-	return 0;
 }

@@ -1,5 +1,6 @@
 // Generic binary search threaded tree
 
+#pragma once
 #include<iostream>
 using namespace std;
 
@@ -167,5 +168,3 @@ void ThreadedTree<T>::postorder() {
         }
     }
 }
-
-

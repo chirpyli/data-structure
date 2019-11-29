@@ -24,7 +24,7 @@ Data structure and algorithm learning notes and codes.
 ## Tree
 - [二叉查找树](./tree/二叉查找树.md)
 - [线索树](./tree/线索树.md)
-
+- [树的平衡DSW算法](./tree/树的平衡DSW算法.md)
 
 ## Graph
 - [图的表示与遍历](./graph/图的遍历与表示.md)

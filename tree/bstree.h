@@ -88,9 +88,10 @@ public:
 	void iterativePostorder();	// 深度遍历之后序树遍历
 	void breadthFirst();		// 广度优先遍历
     void morrisInorder();       // Morris算法中序遍历
+	void morrisPreorder();
 
-	const T& findMin()const;	// 查找最小值，并返回最小值
-    const T &findMax() const;	// 查找最大值，并返回最大值
+	const T& findMin();	// 查找最小值，并返回最小值
+    const T& findMax();	// 查找最大值，并返回最大值
 protected:
 	Node<T>* root; //根节点
     int count;
@@ -112,6 +113,31 @@ protected:
 
 	void balance(T* data, int first, int last);		// 初始构建平衡树
 };
+
+// 前序遍历Morris算法实现
+template<class T>
+void BST<T>::morrisPreorder() {
+	Node<T>* p = root;
+	Node<T>* tmp;
+	while (p != NULL) {
+		if (p->left == NULL) {
+			visit(p);
+			p = p->right;
+		} else {
+			tmp = p->left;
+			while (tmp->right != NULL && tmp->right != p)
+				tmp = tmp->right;
+			if (tmp->right == NULL) {
+				visit(p);
+				tmp->right = p;
+				p = p->left;
+			} else {
+				tmp->right = NULL;
+				p = p->right;
+			}
+		}
+	}
+}
 
 // 中序遍历Morris算法实现
 template<class T>
@@ -136,7 +162,6 @@ void BST<T>::morrisInorder() {
 			}
 		}
 	}
-
 } 
 
 //根据数组中的内容构造树
@@ -435,14 +460,14 @@ Node<T>* BST<T>::findMax_loop(Node<T>* t) const {
 
 //查找最小值，并返回最小值
 template<class T>
-const T& BST<T>::findMin() const {
+const T& BST<T>::findMin(){
 	Node<T>* p=findMin(root);
 	return p->data;
 }
 
 //查找最大值，并返回最大值
 template<class T>
-const T& BST<T>::findMax() const {
+const T& BST<T>::findMax() {
 	Node<T>* p=findMax(root);
 	return p->data;
 }

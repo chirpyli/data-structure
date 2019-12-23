@@ -1,5 +1,6 @@
 // 各种内排序算法的实现
-
+#include<memory>
+#include<cstring>
 #include<iostream>
 #include<cassert>
 
@@ -197,9 +198,24 @@ void merge_sort(T* a, int start, int end) {
     } 
 }
 
+// 桶排序
+void bucket_sort(int* a, const int n) {
+    const int vmax = 20;
+    int* t = new int[vmax];
+    memset(t, 0, 20 * sizeof(int)); 
+    for (int i = 0; i < n; ++i) {
+        t[a[i]] = 1;
+    }
+    for (int i = 0, j = 0; i < vmax; ++i) {
+        if (t[i] == 1) {
+            a[j++] = i;
+        }
+    }
+}
+
 
 int main() {
-    int a[] = {1,4,6,3,9,3,2};
+    int a[] = {1,4,6,3,9,13,2};
     int b[] = {1,3,4,6,2,3,9};
     // bubble_sort<int>(a, sizeof(a)/sizeof(int));
     // double_bubble_sort<int>(a, sizeof(a)/sizeof(int));
@@ -209,6 +225,7 @@ int main() {
     // quick_sort<int>(a, sizeof(a)/sizeof(int));
 
     // merge<int>(b, 0, 3, sizeof(b)/sizeof(int) - 1);
-    merge_sort<int>(a, 0, sizeof(a)/sizeof(int) - 1);
+    // merge_sort<int>(a, 0, sizeof(a)/sizeof(int) - 1);
+    bucket_sort(a, sizeof(a)/sizeof(int));
     print_array<int>(a, sizeof(a)/sizeof(int));
 }

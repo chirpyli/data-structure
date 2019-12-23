@@ -1,3 +1,5 @@
+// 各种内排序算法的实现
+
 #include<iostream>
 #include<cassert>
 
@@ -123,7 +125,7 @@ void quick_recursion_sort(T* a, const int begin, const int end) {
         while (right > mp && a[right] > middle)
             --right;
         
-        if (left < right) {
+        if (left <= right) {
             tmp = a[left];
             a[left] = a[right];
             a[right] = tmp;
@@ -147,14 +149,66 @@ void quick_sort(T* a, const int n) {
 }
 
 
+template<class T>
+void merge(T* a, const int start, const int mid, const int end) {
+    // const int n1 = mid - start + 1;
+    // const int n2 = end - mid;
+    const int n = end - start + 1;
+    T* b = new T[n];
+    int k = 0;
+    int i = start;
+    int j = mid + 1;
+    for (; i <= mid && j <= end; ++k) {
+        if (a[i] < a[j]) {
+            b[k] = a[i++];
+        } else {
+            b[k] = a[j++];
+        }
+    }
+    
+    if (j > end) {
+        while (i <= mid) {
+            b[k++] = a[i++];
+        }
+    }
+
+    if (i > mid) {
+        while (j <= end) {
+            b[k++] = a[j++];
+        }
+    }
+
+    for (int i = 0, j = start; i < n;) {
+        a[j++] = b[i++];
+    }
+
+    delete [] b;
+}
+
+
+// 归并排序
+template<class T>
+void merge_sort(T* a, int start, int end) {
+    if (start < end) {
+        int mid = (start + end) / 2;
+        merge_sort(a, start, mid);
+        merge_sort(a, mid + 1, end);
+        merge(a, start, mid, end);
+    } 
+}
+
 
 int main() {
     int a[] = {1,4,6,3,9,3,2};
+    int b[] = {1,3,4,6,2,3,9};
     // bubble_sort<int>(a, sizeof(a)/sizeof(int));
     // double_bubble_sort<int>(a, sizeof(a)/sizeof(int));
     // swap_sort<int>(a, sizeof(a)/sizeof(int));
     // select_sort<int>(a, sizeof(a)/sizeof(int));
     // insert_sort<int>(a, sizeof(a)/sizeof(int));
-    quick_sort<int>(a, sizeof(a)/sizeof(int));
+    // quick_sort<int>(a, sizeof(a)/sizeof(int));
+
+    // merge<int>(b, 0, 3, sizeof(b)/sizeof(int) - 1);
+    merge_sort<int>(a, 0, sizeof(a)/sizeof(int) - 1);
     print_array<int>(a, sizeof(a)/sizeof(int));
 }

@@ -95,22 +95,56 @@ void select_sort(T* a, const int n) {
 
 // 插入排序法
 template<class T>
+void insert_sort(T* a, const int n) {
+    T tmp;
+    for (int i = 1; i < n; ++i) {
+        for (int j = i; j > 0; --j) {
+            if (a[j] < a[j-1]) {
+                tmp = a[j-1];
+                a[j-1] = a[j];
+                a[j] = tmp;
+            } else 
+                break;
+        }
+    }
+}
 
 
+template<class T>
+void quick_recursion_sort(T* a, const int begin, const int end) {
+    int left = begin;
+    int right = end;
+    const int mp = (begin + end) / 2;   // 中间值
+    const T middle = a[mp];
+    T tmp;
+    do {
+        while (left < mp && a[left] < middle)
+            ++left;
+        while (right > mp && a[right] > middle)
+            --right;
+        
+        if (left < right) {
+            tmp = a[left];
+            a[left] = a[right];
+            a[right] = tmp;
+            ++left;
+            --right;
+        }
+    } while (left <= right);
 
+    if (begin < right)
+        quick_recursion_sort(a, begin, right);
+    
+    if (end > left)
+        quick_recursion_sort(a, left, end);
 
-
-
-
-
-
-
-
-
-
+}
 
 // 快速排序法
-
+template<class T>
+void quick_sort(T* a, const int n) {
+    quick_recursion_sort<T>(a, 0, n - 1);    
+}
 
 
 
@@ -119,6 +153,8 @@ int main() {
     // bubble_sort<int>(a, sizeof(a)/sizeof(int));
     // double_bubble_sort<int>(a, sizeof(a)/sizeof(int));
     // swap_sort<int>(a, sizeof(a)/sizeof(int));
-    select_sort<int>(a, sizeof(a)/sizeof(int));
+    // select_sort<int>(a, sizeof(a)/sizeof(int));
+    // insert_sort<int>(a, sizeof(a)/sizeof(int));
+    quick_sort<int>(a, sizeof(a)/sizeof(int));
     print_array<int>(a, sizeof(a)/sizeof(int));
 }

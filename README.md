@@ -2,8 +2,8 @@
 Data structure and algorithm learning notes and codes.
 
 ## Array
- - [数组](./array/数组.md)
-
+- [数组](./array/数组.md)
+- [内排序](./array/排序.md)
 
 ## List
 - [链表](./list/链表.md)
@@ -28,6 +28,8 @@ Data structure and algorithm learning notes and codes.
 - [二叉查找树的Morris遍历算法](./tree/二叉查找树的Morris遍历算法.md)
 - [树的平衡DSW算法](./tree/树的平衡DSW算法.md)
 - [AVL树](./tree/AVL树.md)
+- [红黑树](./tree/红黑树.md)
+
 
 ## Graph
 - [图的表示与遍历](./graph/图的遍历与表示.md)

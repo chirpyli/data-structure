@@ -1,5 +1,5 @@
 #include<iostream>
-
+#include<queue>
 namespace mytree {
 
 using namespace std;
@@ -9,17 +9,16 @@ enum ecolor {
     black,
 };
 
-template<class T>
 struct Node {
-    Node(T v):data(v),color(ecolor::red),left(nullptr),right(nullptr),parent(nullptr){}
-    
-    Node<T>* grandparent() {
+    Node():key(-1),color(ecolor::red),left(nullptr),right(nullptr),parent(nullptr){}
+    Node(int k, Node* nil):key(k),color(ecolor::red),left(nil),right(nil),parent(nullptr){}
+    Node* grandparent() {
         if (nullptr == parent)
             return nullptr;
         return parent->parent;
     }
 
-    Node<T>* uncle() {
+    Node* uncle() {
         if (nullptr == grandparent())
             return nullptr;
         if (grandparent()->left == parent) 
@@ -27,26 +26,238 @@ struct Node {
         else 
             return grandparent()->left;
     }
+
+    Node* sibling() {
+        if (nullptr == parent)
+            return nullptr;
+        if (parent->left == this)
+            return parent->right;
+        else 
+            return parent->left;
+    }
     
-    T data;
+    int key;
     ecolor color;
-    Node<T>* left;
-    Node<T>* right;
-    Node<T>* parent;
-
-
+    Node* left;
+    Node* right;
+    Node* parent;
 };
 
-template<class T>
 class RBTree {
 public:
-    RBTree():root(nullptr),nil(nullptr){}
+    RBTree():root(nullptr) {
+        nil = new Node();
+        nil->color = ecolor::black;
+    }
+    ~RBTree() {
+        delete_tree(root);
+        delete nil;
+    }
 
-    void insert(T e);
+    // 广度优先遍历，方便调试用
+    void print_tree() {
+        if (nullptr == root)
+            cout << "red-black tree is null." << endl;
+
+        queue<Node*> m_queue;
+        m_queue.push(root);
+        while(!m_queue.empty()) {
+            Node* t = m_queue.front();
+            visit(t);
+            if (t->left != nil)
+                m_queue.push(t->left);
+            if (t->right != nil) 
+                m_queue.push(t->right);
+            m_queue.pop();
+        }
+        cout << endl;
+    }
+
+    void insert(int k) {
+        if (nullptr == root) {
+            root = new Node(k, nil);
+            root->color = ecolor::black;
+        } else 
+            insert(root, k);
+    }
 
 private:
-    Node<T>* root;
-    Node<T>* nil;
+    Node* root;
+    Node* nil;
+
+    void visit(Node* n) {
+        if (nullptr == n)
+            return;
+        cout << "<" << n->key << ",";
+        if (n->color == ecolor::red)
+            cout << "r>  ";
+        else 
+            cout << "b>  ";
+    }
+
+    void insert(Node* n, int k) {
+        if (k < n->key) {
+            if (n->left != nil)
+                insert(n->left, k);
+            else {
+                Node* tmp = new Node(k, nil);
+                tmp->parent = n;
+                n->left = tmp;
+                insert_case(tmp);
+            }
+        } else if (k > n->key) {
+            if (n->right != nil)
+                insert(n->right, k);
+            else {
+                Node* tmp = new Node(k, nil);
+                tmp->parent = n;
+                n->right = tmp;
+                insert_case(tmp);
+            }
+        }
+    }
+
+
+    // void insert_case1(Node* n) {
+    //     if (nullptr == n->parent)
+    //         n->color = ecolor::black;
+    //     else
+    //         insert_case2(n);
+    // }
+
+    // void insert_case2(Node* n) {
+    //     if (n->parent->color == ecolor::black)
+    //         return;
+    //     else
+    //         insert_case3(n);
+    // }
+
+    // void insert_case3(Node* n) {
+    //     if (n->uncle() != nullptr && n->uncle()->color == ecolor::red) {
+    //         n->parent->color = ecolor::black;
+    //         n->uncle()->color = ecolor::black;
+    //         n->grandparent()->color = ecolor::red;
+    //         insert_case1(n->grandparent());
+    //     } else
+    //         insert_case4(n);
+    // }
+
+    // void insert_case4(Node* n) {
+    //     if (n == n->parent->right && n->parent == n->grandparent()->left) {
+    //         rotate_left(n);     
+    //         n = n->left;
+    //     } else if (n == n->parent->left && n->parent == n->grandparent()->right) {
+    //         rotate_right(n);    
+    //         n = n->right;
+    //     }
+    //     insert_case5(n);
+    // }
+
+    // void insert_case5(Node* n) {
+    //     n->parent->color = ecolor::black;
+    //     n->grandparent()->color = ecolor::red;
+    //     if (n == n->parent->left && n->parent == n->grandparent()->left)
+    //         rotate_right(n->parent);    
+    //     else
+    //         rotate_left(n->parent);     
+    // }
+    // 将上面的几种情况合并如下：
+    void insert_case(Node* n) {
+        if (nullptr == n->parent) {
+            n->color = ecolor::black;
+            return;
+        }
+        if (n->parent->color == ecolor::red) {
+            if (n->uncle()->color == ecolor::red) {
+                n->parent->color = ecolor::black;
+                n->uncle()->color = ecolor::black;
+                n->grandparent()->color = ecolor::red;
+                insert_case(n->grandparent());
+            } else {
+                if (n == n->parent->right && n->parent == n->grandparent()->left) {
+                    rotate_left(n);     // fixme
+                    rotate_right(n);     
+                    n->color = ecolor::black;
+                    n->left->color = n->right->color = ecolor::red;
+                } else if (n == n->parent->left && n->parent == n->grandparent()->right) {
+                    rotate_right(n);    // fixme
+                    rotate_left(n);
+                    n->color = ecolor::black;
+                    n->left->color = n->right->color = ecolor::red;
+                } else if (n == n->parent->left && n->parent == n->grandparent()->left) {
+                    n->parent->color = ecolor::black;
+                    n->grandparent()->color = ecolor::red;
+                    rotate_right(n->parent);
+                } else if (n == n->parent->right && n->parent == n->grandparent()->right) {
+                    n->parent->color = ecolor::black;
+                    n->grandparent()->color = ecolor::red;   
+                    rotate_left(n->parent);
+                }
+            }
+        }
+    }
+
+
+
+    void delete_tree(Node* n) {
+        if (!n || n == nil)
+            return;
+        delete_tree(n->left);
+        delete_tree(n->right);
+        delete n;
+    }
+
+    void rotate_left(Node* n) {
+        if (n->parent == nullptr) {
+            root = n;
+            return;
+        }
+
+        Node* gp = n->grandparent();
+        Node* fa = n->parent;
+        Node* y = n->left;
+
+        fa->right = y;
+        if (y != nil) {
+            y->parent = fa;
+        }
+
+        n->left = fa;
+        fa->parent = n;
+
+        if (root == fa)
+            root = n;
+        n->parent = gp;
+
+        if (gp != nullptr) {
+            if (gp->left == fa)
+                gp->left = n;
+            else 
+                gp->right = n;
+        }
+    }
+
+    void rotate_right(Node* n) {
+        Node* gp = n->grandparent();
+        Node* fa = n->parent;
+        Node* y = n->right;
+
+        fa->left = y;
+        if (y != nil)
+            y->parent = fa;
+        n->right = fa;
+        fa->parent = n;
+
+        if (fa == nullptr)
+            root = n;
+        n->parent = gp;
+        if (gp != nullptr) {
+            if (gp->left == fa)
+                gp->left = n;
+            else
+                gp->right = n;
+        }
+    }
 };
 
 

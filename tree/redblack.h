@@ -81,6 +81,10 @@ public:
             insert(root, k);
     }
 
+    bool remove(int k) {
+        return delete_child(root, k);
+    }
+
 private:
     Node* root;
     Node* nil;
@@ -175,12 +179,12 @@ private:
                 insert_case(n->grandparent());
             } else {
                 if (n == n->parent->right && n->parent == n->grandparent()->left) {
-                    rotate_left(n);     // fixme
+                    rotate_left(n);     
                     rotate_right(n);     
                     n->color = ecolor::black;
                     n->left->color = n->right->color = ecolor::red;
                 } else if (n == n->parent->left && n->parent == n->grandparent()->right) {
-                    rotate_right(n);    // fixme
+                    rotate_right(n);    
                     rotate_left(n);
                     n->color = ecolor::black;
                     n->left->color = n->right->color = ecolor::red;
@@ -257,6 +261,71 @@ private:
             else
                 gp->right = n;
         }
+    }
+
+    Node* min_child(Node* n) {
+        if (n->left == nil)
+            return n;
+        return min_child(n->left);
+    }
+
+    bool delete_child(Node* n, int k) {
+        if (n->key > k) {
+            if (n->left == nil)
+                return false;
+            delete_child(n->left, k);
+        } else if (n->key < k) {
+            if (n->right == nil)
+                return false;
+            delete_child(n->right, k);
+        } else {
+            if (n->right == nil) {
+                delete_one_child(n);
+                return true;
+            }
+            Node* min = min_child(n->right);
+            std::swap(n->key, min->key);
+            delete_one_child(min);
+
+            return true;
+        }
+    }
+
+    void delete_one_child(Node* n) {
+        Node* child = n->left == nil ? n->right : n->left;
+        if (n->parent == nullptr && n->left && n->right == nil) {
+            root = nullptr;
+            delete n;
+            n = nullptr;
+            return;
+        }
+
+        if (n->parent == nullptr) {
+            delete n;
+            child->parent = nullptr;
+            root = child;
+            root->color = ecolor::black;
+            return;
+        }
+
+        if (n->parent->left == n)
+            n->parent->left = child;
+        if (n->parent->right == n)
+            n->parent->right = child;
+        child->parent = n->parent;
+
+        if (n->color == ecolor::black) {
+            if (child->color == ecolor::red)
+                child->color = ecolor::black;
+            else
+                delete_case(child);
+        }
+
+        delete n;
+    }
+
+    void delete_case(Node* n) {
+
     }
 };
 

@@ -269,6 +269,7 @@ private:
         return min_child(n->left);
     }
 
+    // 复制删除
     bool delete_child(Node* n, int k) {
         if (n->key > k) {
             if (n->left == nil)
@@ -324,12 +325,57 @@ private:
         delete n;
     }
 
+    // 被删除节点及其子节点都是黑色
     void delete_case(Node* n) {
+        // case1: 父节点是null
+        if (n->parent == nullptr) {
+            n->color == ecolor::black;
+            return;
+        }
 
+        // case2: 兄弟节点是红色（隐含其父节点是黑色）
+        if (n->sibling()->color == ecolor::red) {
+            n->parent->color = ecolor::red;
+            n->sibling()->color = ecolor::black;
+            if (n == n->parent->left) 
+                rotate_left(n->parent);
+            else 
+                rotate_right(n->parent);
+        }
+
+        if (n->parent->color == ecolor::black && n->sibling()->color == ecolor::black && n->sibling()->left->color == ecolor::black && n->sibling()->right->color == ecolor::black) {
+            // case3: N的父节点、S是黑色的，另外S的子节点都是黑色的。
+            n->sibling()->color = ecolor::red;
+            delete_case(n->parent);
+        } else if (n->parent->color == ecolor::red && n->sibling()->color == ecolor::black && n->sibling()->left->color == ecolor::black && n->sibling()->right->color == ecolor::black) {
+            // case4: N的父节点P是红色，N的兄弟节点S是黑色，兄弟节点S的子节点都是黑色
+            n->parent->color = ecolor::black;
+            n->sibling()->color = ecolor::red;   
+        } else {
+            if (n->sibling()->color == ecolor::black) {
+                // case5: N的兄弟节点S是黑色， 兄弟节点S的子节点一个是红色一个是黑色
+                if (n == n->parent->left && n->sibling()->left->color == ecolor::red && n->sibling()->right->color == ecolor::black) {
+                    n->sibling()->color = ecolor::red;
+                    n->sibling()->left->color = ecolor::black;
+                    rotate_right(n->sibling()); // fixme
+                } else if (n == n->parent->right && n->sibling()->left->color == ecolor::black && n->sibling()->right->color == ecolor::red) {
+                    n->sibling()->color == ecolor::red;
+                    n->sibling()->right->color = ecolor::black;
+                    rotate_left(n->sibling());  // fixme
+                }
+            }
+
+            // case6: S是黑色，S的右子节点是红色(两个子节点都是红色的情况也在这里)，而N是它父节点的左子节点。 还有一种是镜像对称
+            n->sibling()->color = n->parent->color;
+            n->parent->color = ecolor::black;
+            if (n == n->parent->left) {
+                n->sibling()->right->color = ecolor::black;
+                rotate_left(n->parent);     // fixme
+            } else {
+                n->sibling()->left->color = ecolor::black;
+                rotate_right(n->parent);    // fixme
+            }
+        }
     }
 };
-
-
-
-
 }

@@ -36,5 +36,8 @@ int main() {
 		t->print_tree();
 	}
 
+	t->remove(24);
+	t->print_tree();
+
 	return 0;
 }

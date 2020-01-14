@@ -109,7 +109,7 @@ protected:
 	Node<T>* findMax(Node<T>* t) const;		//迭代方式实现
 	Node<T>* findMin_loop(Node<T>* t) const;		//循环方式实现
 	Node<T>* findMax_loop(Node<T>* t) const;		//循环方式实现
-	bool remove(const T&x,Node<T>*& t) const;
+	bool remove(const T&x, Node<T>*& t) const;
 
 	void balance(T* data, int first, int last);		// 初始构建平衡树
 };

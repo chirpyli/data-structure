@@ -2,7 +2,8 @@
 // #include"dswtree.h"
 // #include"avltree.h"
 // #include"redblack.h"
-#include "selftree.h"
+// #include "selftree.h"
+#include"heap.h"
 
 int main() {
 	int data[] = {8, 3, 13, 1, 4, 6, 7, 11, 12, 18, 24, 29};
@@ -37,13 +38,24 @@ int main() {
 	// t->remove(24);
 	// t->print_tree();
 
-	SplayTree<int> *st = new SplayTree<int>();
-	st->insert(10);
-	st->insert(20);
-	st->insert(1);
-	st->insert(5);
-	st->insert(30);
-	st->breadthFirst();
+	// SplayTree<int> *st = new SplayTree<int>();
+	// st->insert(10);
+	// st->insert(20);
+	// st->insert(1);
+	// st->insert(5);
+	// st->insert(30);
+	// st->breadthFirst();
+
+	MaxHeap<int> *mh = new MaxHeap<int>();
+	mh->push(1);
+	mh->print();
+	mh->push(10);
+	mh->push(100);
+	mh->push(30);
+	mh->print();
+	mh->pop();
+	mh->print();
+
 
 	return 0;
 }

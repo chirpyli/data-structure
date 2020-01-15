@@ -13,6 +13,16 @@ public:
         data.push_back(nul);        // 采取已1为基数存储元素，0空着 
     }
 
+    MaxHeap(T* a, int length):count(length) {
+        data = vector<T>(a, a + length);
+        T nul = T();
+        data.insert(data.begin(), nul);
+
+        for (int i = length / 2; i > 0; --i) {
+            build_heap(i);
+        }
+    }
+
     void push(const T& e);     // 新增一个元素
     const T pop();             // 弹出根节点
 
@@ -26,8 +36,27 @@ protected:
         this->data[a] = this->data[b];
         this->data[b] = tmp;
     }
+
+    void build_heap(int i);
 };
 
+template<class T>
+void MaxHeap<T>::build_heap(int i) {
+    int left = 2 * i;
+    int right = 2 * i + 1;
+    int largest = i;
+
+    if (left <= this->count && this->data[left] > this->data[largest])
+        largest = left;
+
+    if (right <= this->count && this->data[right] > this->data[largest])
+        largest = right;
+
+    if (largest != i) {
+        this->swap(i, largest);
+        build_heap(largest);
+    }
+}
 
 template<class T>
 void MaxHeap<T>::push(const T& e) {

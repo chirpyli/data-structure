@@ -6,8 +6,8 @@
 #include"heap.h"
 
 int main() {
-	int data[] = {8, 3, 13, 1, 4, 6, 7, 11, 12, 18, 24, 29};
-	// int data[5] = {13, 10, 15, 5, 1};
+	// int data[] = {8, 3, 13, 1, 4, 6, 7, 11, 12, 18, 24, 29};
+	int data[5] = {13, 10, 15, 5, 1};
 	// STree<int> *t = new STree<int>();
 	// for (auto i : data) {
 	// 	t->insert(i);
@@ -46,14 +46,14 @@ int main() {
 	// st->insert(30);
 	// st->breadthFirst();
 
-	MaxHeap<int> *mh = new MaxHeap<int>();
-	mh->push(1);
-	mh->print();
-	mh->push(10);
-	mh->push(100);
-	mh->push(30);
-	mh->print();
-	mh->pop();
+	MaxHeap<int> *mh = new MaxHeap<int>(data, 5);
+	// mh->push(1);
+	// mh->print();
+	// mh->push(10);
+	// mh->push(100);
+	// mh->push(30);
+	// mh->print();
+	// mh->pop();
 	mh->print();
 
 

@@ -29,6 +29,8 @@ Data structure and algorithm learning notes and codes.
 - [树的平衡DSW算法](./tree/树的平衡DSW算法.md)
 - [AVL树](./tree/AVL树.md)
 - [红黑树](./tree/红黑树.md)
+- [自适应树](./tree/自适应树.md)
+- [堆](./tree/堆.md)
 
 
 ## Graph

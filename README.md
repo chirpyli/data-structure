@@ -4,7 +4,7 @@ Data structure and algorithm learning notes and codes.
 ## Array
 - [数组](./array/数组.md)
 - [内排序](./array/排序.md)
-
+- [堆排序](./array/堆排序.md)
 ## List
 - [链表](./list/链表.md)
 - [跳跃链表](./list/跳跃链表.md)

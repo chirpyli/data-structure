@@ -9,6 +9,7 @@ Data structure and algorithm learning notes and codes.
 - [链表](./list/链表.md)
 - [跳跃链表](./list/跳跃链表.md)
 - [稀疏表](./list/稀疏表.md)
+- [自组织链表](./list/自组织链表.md)
 - [常见链表算法题](./list/常见链表算法题.md)
 
 ## Stack

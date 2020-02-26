@@ -37,3 +37,7 @@ Data structure and algorithm learning notes and codes.
 ## Graph
 - [图的表示与遍历](./graph/图的遍历与表示.md)
 - [Dijkstra算法](./graph/Dijkstra算法.md)
+
+
+## Hash
+- [哈希表原理](./hash/哈希表原理.md)

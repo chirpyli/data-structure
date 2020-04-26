@@ -67,6 +67,7 @@ protected:
 	void clear(Node<T>*);
     void balance(T* data, int first, int last);		// 初始构建平衡树
     bool remove(const T&x, Node<T>*& t) const;
+	void recursiveInsert(Node<T>*&, const T&);	
     Node<T>* findMin(Node<T>* t) const;		//迭代方式实现
 	Node<T>* findMax(Node<T>* t) const;
 	virtual void visit(Node<T>* p) {
@@ -109,6 +110,16 @@ void BST<T>::clear(Node<T> *p) {
 		delete p;
 	}
     count = 0;
+}
+
+//插入，递归实现
+template<class T>
+void BST<T>::recursiveInsert(Node<T>*& p, const T& el) {
+	if (p == NULL)
+		p = new Node<T>(el);
+	else if (el < p->data)
+		recursiveInsert(p->left, el);
+	else recursiveInsert(p->right, el);
 }
 
 //插入，非递归形式

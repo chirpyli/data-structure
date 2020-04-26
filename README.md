@@ -41,3 +41,7 @@ Data structure and algorithm learning notes and codes.
 
 ## Hash
 - [哈希表原理](./hash/哈希表原理.md)
+
+
+## Algorithm
+- [算法题目一](./algorithm/算法题目一.md)

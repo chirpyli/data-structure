@@ -223,6 +223,8 @@ void Treap<T>::iter_remove(Node<T>* n, const T& e) {
         this->iter_remove(n->right, e);
 }
 
+
+// todo: 代码还未完成
 template<class T>
 void Treap<T>::remove(const T& e) {
     Node<T>* x = this->search(e);

@@ -13,6 +13,7 @@ use tonic::transport::Channel;
 type Session = NetworkClient<Channel>;
 pub type NodeId = u64;
 
+#[derive(Clone)]
 pub struct Host {
     clients: Arc<RwLock<HashMap<NodeId, Session>>>,
     route_table: Arc<RwLock<HashMap<NodeId, RouteValue>>>,
@@ -43,7 +44,7 @@ impl Host {
         }
     }
 
-    pub async fn send_route_message(&self, message: &RouteMessage) {
+    pub async fn send_route_message(&self, message: RouteMessage) {
         let dst = message.dst.clone();
         // 如果dst是本节点，返回
         if self.info.nodeid == dst {
@@ -53,6 +54,7 @@ impl Host {
 
         let req = tonic::Request::new(message.clone());
         // 查找路由表，如果dst在路由表中，则发送给路由表中的next节点；
+        let mut random_send_flag = false;
         let remote;
         {
             let lock_table = self.route_table.read();
@@ -60,9 +62,15 @@ impl Host {
                 remote = r.clone();
             } else {
                 // 如果dst不在路由表中，则随机选择一个已连接的节点，发送
-                self.random_send_route_message(message).await;
+                // self.random_send_route_message(message).await;
+                random_send_flag = true;
                 return;
             }
+        }
+
+        if random_send_flag {
+            self.random_send_route_message(message).await;
+            return;
         }
 
         if let Some(c) = self.try_get_client(remote.next()) {
@@ -75,14 +83,13 @@ impl Host {
                 Err(e) => {
                     error!("route message to {} failure: {}", remote.next(), e);
                     // todo: 从clients中删除对应项， 更新路由表
-
                     return;
                 }
             }
         }
     }
 
-    async fn random_send_route_message(&self, message: &RouteMessage) {
+    async fn random_send_route_message(&self, message: RouteMessage) {
         let nodes: Vec<NodeId> = self
             .clients
             .read()
@@ -143,10 +150,16 @@ impl Host {
         info!("connected to {} success.", remote);
         NetworkClient::new(conn)
     }
-
-
 }
 
+#[async_trait]
+impl Handler for Host {
+    async fn handle(&self, message: RouteMessage) {
+        self.send_route_message(message).await;
+    }
+}
+
+#[derive(Clone)]
 struct HostInfo {
     pub nodeid: u64,
 }
@@ -189,14 +202,19 @@ pub trait Handler: Send + Sync + Clone {
 struct Server<H> {
     nodeid: NodeId,
     route_table: Arc<RwLock<HashMap<NodeId, RouteValue>>>,
-    handler: H
+    handler: H,
 }
 
-impl<H> Server<H> {
-    pub fn new(nodeid: NodeId, route_table: Arc<RwLock<HashMap<NodeId, RouteValue>>>) -> Self {
+impl<H: Handler> Server<H> {
+    pub fn new(
+        nodeid: NodeId,
+        route_table: Arc<RwLock<HashMap<NodeId, RouteValue>>>,
+        handler: H,
+    ) -> Self {
         Server {
             nodeid,
             route_table,
+            handler,
         }
     }
 
@@ -242,7 +260,7 @@ impl<H> Server<H> {
 }
 
 #[async_trait]
-impl Network for Server {
+impl<H: Handler + Send + 'static> Network for Server<H> {
     async fn hello(
         &self,
         request: tonic::Request<Hello>,
@@ -279,7 +297,7 @@ impl Network for Server {
             return rev;
         }
 
-        // self.send_route_message(message);
+        self.handler.handle(message.clone()).await;
 
         // fixme: 临时先这么返回
         rev
@@ -478,4 +496,4 @@ async fn network_handle<R: Message, S: Message>(
     let res_bytes = res.encode();
     res_bytes
 }
-*/ 
+*/

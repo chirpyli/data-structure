@@ -29,8 +29,62 @@ impl Host {
         }
     }
 
-    pub fn route_table(&self) -> Arc<RwLock<HashMap<NodeId, RouteValue>>> {
-        self.route_table.clone()
+    pub async fn run(&self) {
+        let port = 30000 + self.info.nodeid();
+        let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), port as u16);
+        let network = Server::new(self.info.nodeid(), self.route_table.clone(), self.clone());
+        let networkservice = NetworkServer::new(network);
+        tonic::transport::Server::builder()
+            .add_service(networkservice)
+            .serve(addr)
+            .await
+            .unwrap();
+    }
+
+    // 定时执行拉取邻节点路由表
+    async fn random_pull_route_table(&self) {
+        // fixme:先根据自身的连接列表更新路由表，正常情况还应该时有新连接或者断开一个节点时更新路由表，先不写。
+        let connect_list: Vec<NodeId> = self
+            .clients
+            .read()
+            .iter()
+            .map(|(k, _v)| k.clone())
+            .collect();
+        let list_len = connect_list.len() as u64;
+        if list_len == 0 {
+            return;
+        }
+
+        {
+            for ref i in connect_list {
+                let mut lock = self.route_table.write();
+                if !lock.contains_key(i) {
+                    lock.insert(i.clone(), RouteValue::new(i.clone(), 1));
+                }
+            }
+        }
+
+        let mut items = Vec::new();
+        for (k, v) in self.route_table.read().iter() {
+            let item = RouteItem {
+                dst: k.clone(),
+                next: v.next.clone(),
+                distance: v.distance,
+            };
+            items.push(item);
+        }
+
+        let route = RouteTable {
+            nodeid: self.info.nodeid(),
+            item: items,
+        };
+
+        // 为便于测试，随机选取一个节点，实际可随机选取k个节点
+        let k = rand::random::<u64>() % list_len;
+        let random_node = connect_list[k as usize];
+
+        let mut rpc = self.clients.read().get(&k).unwrap();
+        let r = rpc.pull_route_table(route).await; //fixme: 这里返回的对方节点的路由表，应该进行一次合并，这里先不合并了
     }
 
     // 输入连接列表测试用
@@ -303,197 +357,3 @@ impl<H: Handler + Send + 'static> Network for Server<H> {
         rev
     }
 }
-
-// async fn network_handle<R: Message, S: Message>(
-//     handler: impl Handler<R, S>,
-//     request: &[u8],
-// ) -> Vec<u8> {
-//     let req = match R::decode(request) {
-//         Ok(r) => r,
-//         Err(error) => {
-//             error!("server failed to decode request. error={:?}", error);
-//             panic!("server failed to decode request. error={:?}", error)
-//         }
-//     };
-
-//     let res = handler.handle(req).await;
-//     let res_bytes = res.encode();
-//     res_bytes
-// }
-
-/*
-else {
-    let mut rpc = self.create_new_client(remote.next().clone()).await;
-    // let hello = Hello {
-    //     nodeid: self.info.nodeid(),
-    // };
-    // match rpc.hello(hello).await {
-    //     Ok(h) => {
-    //         info!("received hello from {}", h.into_inner().nodeid);
-    //     }
-    //     Err(e) => {
-    //         error!("send hello to {} failure, {}", remote.next(), e);
-    //         // todo: 从clients中删除对应项， 更新路由表
-    //         return;
-    //     }
-    // }
-
-    match rpc.route_message(req).await {
-        Ok(_) => {
-            info!("route message to {}", remote.next());
-        }
-        Err(e) => {
-            error!("route message to {} failure: {}", remote.next(), e);
-            // todo: 从clients中删除对应项， 更新路由表
-
-            return;
-        }
-    }
-
-    let mut lock = self.clients.write();
-    lock.insert(remote.next().clone(), rpc);
-}
-
-*/
-
-/*
-
-
-#[derive(Clone)]
-pub struct ServerImpl<R: Message, S: Message, H: Handler<R, S>> {
-    handler: H,
-    pub listen_addr: Option<SocketAddr>,
-    whitelist: Option<BTreeSet<IpAddr>>,
-    req: PhantomData<R>,
-    res: PhantomData<S>,
-}
-
-impl<R: Message + Sync + 'static, S: Message + Sync + 'static, H: Handler<R, S> + 'static>
-    ServerImpl<R, S, H>
-{
-    pub fn new(handler: H) -> Self {
-        ServerImpl {
-            handler,
-            listen_addr: None,
-            whitelist: None,
-            req: PhantomData,
-            res: PhantomData,
-        }
-    }
-
-    pub fn new_restricted<I: IntoIterator<Item = SocketAddr>>(handler: H, white_list: I) -> Self {
-        let mut set = BTreeSet::new();
-        for addr in white_list {
-            set.insert(addr.ip());
-        }
-
-        let server = ServerImpl {
-            handler,
-            listen_addr: None,
-            whitelist: Some(set),
-            req: PhantomData,
-            res: PhantomData,
-        };
-        info!("whitelist :{:?}", server.whitelist);
-
-        server
-    }
-
-    pub async fn start(&self) -> Result<(), Error> {
-        let addr = self.listen_addr.clone().unwrap();
-        let network;
-        if let Some(ref set) = self.whitelist {
-            let mut list = Vec::new();
-            for ip in set {
-                let addr = SocketAddr::new(ip.clone(), 0);
-                list.push(addr);
-            }
-            network = ServerImpl::new_restricted(self.handler.clone(), list);
-        } else {
-            network = ServerImpl::new(self.handler.clone());
-        }
-
-        //            .add_service(NetworkServer::new(network))
-        let networkservice = NetworkServer::with_interceptor(network, intercept);
-        match tonic::transport::Server::builder()
-            .add_service(networkservice)
-            .serve(addr)
-            .await
-        {
-            Ok(_) => info!("server started."),
-            Err(e) => {
-                error!("server start error. {}", e);
-                return Err(Error::GrpcTransport(e));
-            }
-        }
-
-        Ok(())
-    }
-
-    /// if whitelist is exist, check if remote is in list.
-    fn check_in_whitelist(&self, remote: &SocketAddr) -> bool {
-        let ref ip = remote.ip();
-        if self.whitelist.is_some() {
-            let list = self.whitelist.as_ref().unwrap();
-            return list.contains(ip);
-        }
-
-        true
-    }
-}
-
-#[async_trait]
-impl<R, S, H> Network for ServerImpl<R, S, H>
-where
-    R: Message + Sync + 'static,
-    S: Message + Sync + 'static,
-    H: Handler<R, S> + 'static,
-{
-    async fn call(
-        &self,
-        request: tonic::Request<RawRequest>,
-    ) -> Result<tonic::Response<RawResponse>, tonic::Status> {
-        let remote = request.remote_addr();
-        if let Some(ref addr) = remote {
-            if !self.check_in_whitelist(addr) {
-                info!("reject request from {}, not in white list.", addr);
-                let status =
-                    Status::permission_denied("local address is not in remote white list.");
-                return Err(status);
-            }
-        } else {
-            let status = Status::permission_denied(
-                "local request is reject by remote server , address is none.",
-            );
-            return Err(status);
-        }
-
-        debug!("received request {:?} from {:?}.", request, remote);
-        let req = request.into_inner();
-        let req_bytes = req.req.as_slice();
-        let res_bytes = network_handle(self.handler.clone(), req_bytes).await;
-
-        let raw_res = RawResponse { res: res_bytes };
-        let res = tonic::Response::new(raw_res);
-        debug!("response to {:?}, {:?}", res, remote);
-        Ok(res)
-    }
-}
-
-async fn network_handle<R: Message, S: Message>(
-    handler: impl Handler<R, S>,
-    request: &[u8],
-) -> Vec<u8> {
-    let req = match R::decode(request) {
-        Ok(r) => r,
-        Err(error) => {
-            error!("server failed to decode request. error={:?}", error);
-            panic!("server failed to decode request. error={:?}", error)
-        }
-    };
-
-    let res = handler.handle(req).await;
-    let res_bytes = res.encode();
-    res_bytes
-}
-*/

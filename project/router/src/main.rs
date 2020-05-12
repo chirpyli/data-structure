@@ -5,14 +5,13 @@ use std::env;
 
 mod host;
 mod netproto;
-mod server;
 
 use host::NodeId;
 use std::collections::HashMap;
 
 /*
-1. 为了简化程序设计，运行时输入 router nodeid, 例如节点id=1，则输入router 1, 监听端口为30000+id值，
-2. 为简化程序设计，没有进行参数合法性检测，相关错误处理被忽略.
+1. 运行时输入 router nodeid, 例如节点id=1，则输入router 1, 监听端口为30000+id值，
+2. 不进行参数合法性检测，相关错误处理被忽略.
 3.
 */
 

@@ -7,7 +7,7 @@ use rand;
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Arc;
-use tokio::time::{self, Duration};
+use tokio::time::Duration;
 use tonic::transport::Channel;
 
 type Session = NetworkClient<Channel>;
@@ -29,7 +29,7 @@ impl Host {
         }
     }
 
-    pub async fn run(&self) {
+    pub async fn start(&self) {
         let port = 30000 + self.info.nodeid();
         let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), port as u16);
         let network = Server::new(self.info.nodeid(), self.route_table.clone(), self.clone());
@@ -41,50 +41,12 @@ impl Host {
             .unwrap();
     }
 
-    // 定时执行拉取邻节点路由表
-    async fn random_pull_route_table(&self) {
-        // fixme:先根据自身的连接列表更新路由表，正常情况还应该时有新连接或者断开一个节点时更新路由表，先不写。
-        let connect_list: Vec<NodeId> = self
-            .clients
-            .read()
-            .iter()
-            .map(|(k, _v)| k.clone())
-            .collect();
-        let list_len = connect_list.len() as u64;
-        if list_len == 0 {
-            return;
+    pub async fn timer_task(&self) {
+        let interval = Duration::new(5, 0); // 1s timer
+        loop {
+            tokio::time::delay_for(interval).await;
+            self.random_pull_route_table().await;
         }
-
-        {
-            for ref i in connect_list {
-                let mut lock = self.route_table.write();
-                if !lock.contains_key(i) {
-                    lock.insert(i.clone(), RouteValue::new(i.clone(), 1));
-                }
-            }
-        }
-
-        let mut items = Vec::new();
-        for (k, v) in self.route_table.read().iter() {
-            let item = RouteItem {
-                dst: k.clone(),
-                next: v.next.clone(),
-                distance: v.distance,
-            };
-            items.push(item);
-        }
-
-        let route = RouteTable {
-            nodeid: self.info.nodeid(),
-            item: items,
-        };
-
-        // 为便于测试，随机选取一个节点，实际可随机选取k个节点
-        let k = rand::random::<u64>() % list_len;
-        let random_node = connect_list[k as usize];
-
-        let mut rpc = self.clients.read().get(&k).unwrap();
-        let r = rpc.pull_route_table(route).await; //fixme: 这里返回的对方节点的路由表，应该进行一次合并，这里先不合并了
     }
 
     // 输入连接列表测试用
@@ -117,7 +79,7 @@ impl Host {
             } else {
                 // 如果dst不在路由表中，则随机选择一个已连接的节点，发送
                 // self.random_send_route_message(message).await;
-                random_send_flag = true;
+                random_send_flag = true; // fixme: 这块还没有写好，先暂时忽略，优先写正常情况下的处理逻辑
                 return;
             }
         }
@@ -128,11 +90,11 @@ impl Host {
         }
 
         if let Some(c) = self.try_get_client(remote.next()) {
-            info!("remote {} is connected.", remote.next());
+            trace!("remote {} is connected.", remote.next());
             let mut rpc = c;
             match rpc.route_message(req).await {
                 Ok(_) => {
-                    info!("route message to {}", remote.next());
+                    info!("|------------->route message to {}", remote.next());
                 }
                 Err(e) => {
                     error!("route message to {} failure: {}", remote.next(), e);
@@ -141,6 +103,52 @@ impl Host {
                 }
             }
         }
+    }
+
+    // 定时执行拉取邻节点路由表
+    async fn random_pull_route_table(&self) {
+        // fixme:先根据自身的连接列表更新路由表，正常情况还应该时有新连接或者断开一个节点时更新路由表，先不写。
+        let connect_list: Vec<NodeId> = self
+            .clients
+            .read()
+            .iter()
+            .map(|(k, _v)| k.clone())
+            .collect();
+        let list_len = connect_list.len() as u64;
+        if list_len == 0 {
+            return;
+        }
+
+        {
+            for ref i in connect_list.clone() {
+                let mut lock = self.route_table.write();
+                lock.insert(i.clone(), RouteValue::new(i.clone(), 1));
+            }
+        }
+
+        let mut items = Vec::new();
+        for (k, v) in self.route_table.read().iter() {
+            let item = RouteItem {
+                dst: k.clone(),
+                next: v.next.clone(),
+                distance: v.distance,
+            };
+            items.push(item);
+        }
+
+        let route = RouteTable {
+            nodeid: self.info.nodeid(),
+            item: items,
+        };
+
+        // 为便于测试，随机选取一个节点，实际可随机选取k个节点
+        let k = rand::random::<u64>() % list_len;
+        let random_node = connect_list[k as usize];
+
+        let mut rpc = self.clients.read().get(&random_node).unwrap().clone();
+        debug!("random pull node {} route table", random_node);
+        let r = rpc.pull_route_table(route).await;
+        //fixme: 这里返回的对方节点的路由表，应该进行一次合并，这里先不合并了
     }
 
     async fn random_send_route_message(&self, message: RouteMessage) {
@@ -159,7 +167,7 @@ impl Host {
                 let req = tonic::Request::new(message.clone());
                 match rpc.route_message(req).await {
                     Ok(_) => {
-                        info!("route message to {}", random_next);
+                        info!("|------------>random route message to {}", random_next);
                         return;
                     }
                     Err(e) => {
@@ -195,13 +203,13 @@ impl Host {
 
         let mut addr = String::from("http://");
         addr.push_str(remote.to_string().as_str());
-        info!("prepare connecting to {}", addr);
+        trace!("prepare connecting to {}", addr);
 
         let endpoint = tonic::transport::Endpoint::new(addr).unwrap();
         let endpoint = endpoint.timeout(std::time::Duration::new(3, 0));
 
         let conn = endpoint.connect().await.unwrap();
-        info!("connected to {} success.", remote);
+        debug!("connected to {} success.", remote);
         NetworkClient::new(conn)
     }
 }
@@ -228,7 +236,7 @@ impl HostInfo {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct RouteValue {
     pub next: u64,
     pub distance: u64,
@@ -276,32 +284,39 @@ impl<H: Handler> Server<H> {
     fn merge(&self, remote: &RouteTable) -> RouteTable {
         let mut lock = self.route_table.write();
         let remote_nodeid = remote.nodeid.clone();
-        // let items = remote.item;
         let mut rev = Vec::new();
 
-        for item in remote.item.iter() {
-            if let Some(local_item) = lock.get_mut(&item.dst) {
-                let dis = item.distance + 1;
-                if local_item.distance > dis {
-                    local_item.next = remote_nodeid;
-                    local_item.distance = dis;
+        for r_item in remote.item.iter() {
+            // 如果r_item的dst是本节点，则忽略合并
+            if r_item.dst == self.nodeid {
+                continue;
+            }
+
+            // 如果本地有对应dst项
+            if let Some(l_item) = lock.get_mut(&r_item.dst) {
+                let new_dis = r_item.distance + 1;
+                // 如果比本地距离小，则更新
+                if l_item.distance > new_dis {
+                    l_item.next = remote_nodeid;
+                    l_item.distance = new_dis;
                 }
                 let route_item = RouteItem {
-                    dst: item.dst.clone(),
-                    next: local_item.next.clone(),
-                    distance: local_item.distance.clone(),
+                    dst: r_item.dst.clone(),
+                    next: l_item.next.clone(),
+                    distance: l_item.distance.clone(),
                 };
                 rev.push(route_item);
             } else {
+                // 如果本地没有对应dst项, 在本地路由表中插入该dst项，next=remote_nodeid, distance=r_item.distance+1
                 let route_item = RouteItem {
-                    dst: item.dst.clone(),
-                    next: item.next.clone(),
-                    distance: item.distance.clone(),
+                    dst: r_item.dst.clone(),
+                    next: remote_nodeid.clone(),
+                    distance: r_item.distance.clone() + 1,
                 };
                 rev.push(route_item);
                 lock.insert(
-                    item.dst.clone(),
-                    RouteValue::new(item.next.clone(), item.distance.clone()),
+                    r_item.dst.clone(),
+                    RouteValue::new(remote_nodeid, r_item.distance.clone() + 1),
                 );
             }
         }
@@ -331,6 +346,10 @@ impl<H: Handler + Send + 'static> Network for Server<H> {
     ) -> Result<tonic::Response<RouteTable>, tonic::Status> {
         let remote_table = request.into_inner();
         let local_table = self.merge(&remote_table);
+        debug!(
+            "print route table after merge: {:?}",
+            self.route_table.read()
+        );
         Ok(tonic::Response::new(local_table))
     }
 
@@ -347,7 +366,10 @@ impl<H: Handler + Send + 'static> Network for Server<H> {
         }));
 
         if message.dst == self.nodeid.clone() {
-            info!("received route message success from {}", message.src);
+            info!(
+                "|-----------> received route message success from {}, payload: {:?}",
+                message.src, message.payload
+            );
             return rev;
         }
 

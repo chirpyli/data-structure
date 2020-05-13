@@ -14,8 +14,9 @@ tonic = "0.2"
 prost = "0.6"
 tokio = { version = "0.2", features = ["macros", "time"] }
 async-trait = "0.1"
-futures = { version = "0.3.1", features = ["compat", "async-await", "thread-pool"] }
-rand = "0.6.5"
+futures = { version = "0.3", features = ["compat", "async-await", "thread-pool"] }
+rand = "0.7"
+
 
 [build-dependencies]
 tonic-build = "0.2"

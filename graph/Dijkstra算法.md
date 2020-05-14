@@ -25,8 +25,29 @@
 22
 23      return dist[], prev[]
 ```
+
+优先队列实现伪代码：
+```
+function dijkstra(graph, s)
+    for each vertex v in graph
+        dist[v] = INF
+        prev[v] = NULL
+        visit[v] = false
+        add v to Priority Queue Q   // 如果v是源节点，则距离置为0
+    dist[s] = 0
+
+    while Q is not empty
+        u = Extract MIN from Q 从优先队列中弹出当前距离最小的顶点，隐含了remove u from Q   
+        for each neithbor v in u 对u的未访问的邻节点
+            tmp = dist[u] + edge_weigh(u,v)
+            if tmp < dist[v]
+                dist[v] = tmp
+                prev[v] = u
+
+        visit[u] = true
+    return dist[], prev[]
+```
 可以看到Dijkstra算法核心思想是每次都从距离值最短的顶点开始探索最短路径，从当前顶点探索更新完自己的邻接节点后，如果发现有其他顶点的距离值更小，则跳至那个顶点，继续探索，直到所有顶点都被处理过。其算法过程可参考下图：
-> 如果有负权边，每经过一次负权边，路径长度都会减小，该算法就会陷入死循环。
 
 ![image](.images/Dijkstra_Animation.gif)
 
@@ -43,7 +64,7 @@
 
 Dijkstra算法（包括经典实现和优先级队列实现）完整的C++代码实现参见[dijkstra.cpp](../codes/graph/dijkstra.cpp)
 
->最后需要注意Dijkstra的适用性，它不适用于包含负权边的图。因为Dijkstra算法基于这样的假设：对于处理过的节点，没有前往该节点的更短路径。这种假设仅在没有负权边时才成立， 如果有负权边，每经过一次负权边，路径长度都会减小，该算法下会陷入死循环。因此，不能将Dijkstra's algorithm用于包含负权边的图。
+>最后需要注意Dijkstra的适用性，它不适用于包含负权边的图。因为Dijkstra算法基于这样的假设：对于处理过的节点，没有前往该节点的更短路径。这种假设仅在没有负权边时才成立。 
 
 
 >参考文档：[Dijkstra's algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm)

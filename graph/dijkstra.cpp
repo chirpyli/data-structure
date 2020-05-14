@@ -1,4 +1,5 @@
 // Dijkstra最短路径算法
+// #pragma GCC diagnostic error "-std=c++11"
 
 #include <cassert>
 #include<vector>
@@ -73,19 +74,19 @@ public:
     vector<int> dijkstra(int source) {
         vector<int> prev;
         vector<int> dist;
-        list<int> vlist;
+        list<int> *vlist = new list<int>;
 
         for (int i = 0; i < this->numVertices; ++i) {
             dist.push_back(INT_MAX);
             prev.push_back(-1);
-            vlist.push_back(i);
+            vlist->push_back(i);
         }
         dist[source] = 0;
  
-        while (!vlist.empty()) {
-            int u =  minVertexDistance(&vlist, &dist);
-            vlist.remove(u);
-            vector<int> neighbors = neighbor_vertices(u);
+        while (!vlist->empty()) {
+            int u =  minVertexDistance(vlist, &dist);
+            vlist->remove(u);
+            vector<int> neighbors = neighbor_vertices(u, vlist);
             for (auto it = neighbors.begin(); it != neighbors.end(); ++it) {
                 int alt = dist[u] + distance(u, *it);
                 if (alt < dist[*it]) {
@@ -108,30 +109,36 @@ public:
         priority_queue<Vertex> pq;
         vector<int> dist;
         vector<int> prev;
+        vector<bool> *visit = new vector<bool>;
         for (int i = 0; i < this->numVertices; ++i) {
             if (i != source) {
                 dist.push_back(INT_MAX);
             } else {
                 dist.push_back(0);
             }
-
             prev.push_back(-1);
+            visit->push_back(false);
         }
 
-        Vertex vsrc(source, 0);
-        pq.push(vsrc);
+        pq.push(Vertex(source, 0));
         while (!pq.empty()) {
             Vertex u(pq.top());
-            pq.pop();          
-            vector<int> neighbor = neighbor_vertices(u.vertex);
-  
-            for (auto it = neighbor.begin(); it != neighbor.end(); ++it) {
-                int alt = dist[u.vertex] + distance(u.vertex, *it);
-                if (alt < dist[*it]) {
-                    dist[*it] = alt;
-                    prev[*it] = u.vertex;
-                    pq.push(Vertex(*it, alt));
+            pq.pop(); 
+            if ((*visit)[u.vertex])
+                continue;
+            cout << endl <<"visit :" << u.vertex << "-----> ";
+            (*visit)[u.vertex] = true;         
+            vector<int> neighbor = neighbor_vertices(u.vertex, visit);
+            cout << "detect neightor: ";            
+            for (auto v : neighbor) {
+                cout << "<" << v << ",";
+                int alt = dist[u.vertex] + distance(u.vertex, v);
+                if (alt < dist[v]) {
+                    dist[v] = alt;
+                    prev[v] = u.vertex;
+                    pq.push(Vertex(v, alt));
                 }
+                cout << dist[v] << "> ";
             }
         }
 
@@ -140,14 +147,25 @@ public:
             cout << i << " : " << dist[i] << endl;
         }
 
-         return prev;
+        delete visit;
+        return prev;
     }
 
-    // 获取邻节点的时候，只获取权值>0的节点，如果不加限制，在输入有负权值的情况下，该算法失效
-    vector<int> neighbor_vertices(int vertex) {
+    vector<int> neighbor_vertices(int vertex, const list<int> *visit) {
+        vector<int> neighbor;
+        for (auto i = visit->begin(); i != visit->end(); ++i) {
+            if (matrix[vertex][*i] != 0) {
+                neighbor.push_back(*i);
+            }
+        }
+
+        return neighbor;
+    }
+
+    vector<int> neighbor_vertices(int vertex, const vector<bool> *visit) {
         vector<int> neighbor;
         for (int i = 0; i < numVertices; ++i) {
-            if (matrix[vertex][i] > 0) {
+            if (matrix[vertex][i] != 0 && visit->at(i) == false) {
                 neighbor.push_back(i);
             }
         }
@@ -236,20 +254,33 @@ void test() {
     }
 }
 
-// 测试含有负权边的图，因为上面程序中设置了权值的检查，所以，下面的程序也能通过，
-// 但如果将程序中没有设置限制负权值的话，就会陷入死循环，因为有有负权值后，会一直在负权值的两顶点间循环，每经过一次负权值路径长度都会减少。
+// 如果是无向图中带有负权边的话，一定是没有最短路径的，有向图带有负权边的话，Dijkstra可能不会计算出最短路径。
+/*
+test negative case:    
+0 : 0 5 6 
+1 : 5 0 -2 
+2 : 6 -2 0 
+
+visit :0-----> detect neightor: <1,5> <2,6> 
+visit :1-----> detect neightor: <2,3> 
+visit :2-----> detect neightor: 0 : 0
+1 : 5
+2 : 3
+path: 1
+
+按照上面的连图画出来最短路径应该是0-2-1，而最后的结果确是0-1，
+这是因为每次都是选取当前最短距离节点，先访问0，然后从1和2中选择了更小的1，
+1访问完后，如果边权重全部是正的话，因为选1的时候已经是最小距离了，所以到下一个节点
+如果是正的话是无论如何也不可能比再比1当前的距离小了，而如果是负值的话，则就可能会比当前值小，
+从而打破了Dijkstra的贪心规则。
+*/
 void test_negative() {
-    Graph g(6);
-    g.addEdge(0, 4, 1);
-    g.addEdge(1, 4, 3);
-    g.addEdge(0, 1, -5);
-    g.addEdge(0, 2, -8);
-    g.addEdge(1, 3, 2);
-    g.addEdge(2, 3, 4);
-    g.addEdge(2, 5, 7);
-    g.addEdge(3, 5, 1);
+    Graph g(3);
+    g.addEdge(0, 1, 5);
+    g.addEdge(0, 2, 6);
+    g.addEdge(2, 1, -2);
     g.print();
-    list<int> path = g.dijkstraShortestPath(4, 5);
+    list<int> path = g.dijkstraShortestPath(0, 1);
     cout << "path: ";
     for (auto it = path.begin(); it != path.end(); ++it) {
         cout << *it << " ";
@@ -259,7 +290,7 @@ void test_negative() {
 int main() {
     cout << "test normal case:" << endl;
     test();
-    cout << "test negative case:" << endl;
+    cout << endl << "test negative case:" << endl;
     test_negative();
 
 

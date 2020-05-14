@@ -143,6 +143,7 @@ public:
          return prev;
     }
 
+    // 获取邻节点的时候，只获取权值>0的节点，如果不加限制，在输入有负权值的情况下，该算法失效
     vector<int> neighbor_vertices(int vertex) {
         vector<int> neighbor;
         for (int i = 0; i < numVertices; ++i) {
@@ -199,8 +200,6 @@ private:
     }
 };
 
-
-
 /*
 邻接矩阵
 0 : 0 3 2 0 0 
@@ -237,8 +236,32 @@ void test() {
     }
 }
 
+// 测试含有负权边的图，因为上面程序中设置了权值的检查，所以，下面的程序也能通过，
+// 但如果将程序中没有设置限制负权值的话，就会陷入死循环，因为有有负权值后，会一直在负权值的两顶点间循环，每经过一次负权值路径长度都会减少。
+void test_negative() {
+    Graph g(6);
+    g.addEdge(0, 4, 1);
+    g.addEdge(1, 4, 3);
+    g.addEdge(0, 1, -5);
+    g.addEdge(0, 2, -8);
+    g.addEdge(1, 3, 2);
+    g.addEdge(2, 3, 4);
+    g.addEdge(2, 5, 7);
+    g.addEdge(3, 5, 1);
+    g.print();
+    list<int> path = g.dijkstraShortestPath(4, 5);
+    cout << "path: ";
+    for (auto it = path.begin(); it != path.end(); ++it) {
+        cout << *it << " ";
+    }
+}
+
 int main() {
+    cout << "test normal case:" << endl;
     test();
+    cout << "test negative case:" << endl;
+    test_negative();
+
 
     return 0;
 }

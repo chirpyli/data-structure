@@ -64,6 +64,11 @@ function dijkstra(graph, s)
 
 Dijkstra算法（包括经典实现和优先级队列实现）完整的C++代码实现参见[dijkstra.cpp](../codes/graph/dijkstra.cpp)
 
+
+为什么不能有负权边？我们以下面这个例子说明：
+![image](.images/dijkstra_n.bmp)
+具体分析见代码中对负权边的测试分析。
+
 >最后需要注意Dijkstra的适用性，它不适用于包含负权边的图。因为Dijkstra算法基于这样的假设：对于处理过的节点，没有前往该节点的更短路径。这种假设仅在没有负权边时才成立。 
 
 

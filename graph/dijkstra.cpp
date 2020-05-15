@@ -104,7 +104,7 @@ public:
          return prev;
     }
 
-    // dijkstra优先队列实现
+    // dijkstra优先队列实现，这里使用的是普通的优先队列，事实上更应该使用Brodal queue或者Fibonacci heap
     vector<int> dijkstra_priority_queue(int source) {
         priority_queue<Vertex> pq;
         vector<int> dist;

@@ -44,10 +44,10 @@ function BellmanFord(list vertices, list edges, vertex source)
 >算法的数学证明可以参考《图论》或《算法导论》中的证明过程。
 
 
-最后代码实现见[bellman_ford.cpp](./bellman_ford.cpp)。
+代码实现见[bellman_ford.cpp](./bellman_ford.cpp)。最后再分析一下时间复杂度，最坏的情况$O(|V||E|)$，这个比较好理解，最好的情况$O(|E|)$，一次松弛所有边的操作就可以了，对应的就是边松弛的顺序恰好是最短路径树的生成顺序。
 
-
-
+### 算法的应用
+其中一个应用就是路由协议了（距离向量协议），对此实现了一个路由协议测试工程，代码见[router](../project/router)。实现了一个通过路由表的方式进行的路由算法。
 
 >参考文档：
 [Bellman–Ford algorithm](https://en.wikipedia.org/wiki/Bellman%E2%80%93Ford_algorithm)      

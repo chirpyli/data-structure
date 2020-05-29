@@ -31,7 +31,7 @@ Data structure and algorithm learning notes and codes.
 - [红黑树](./tree/红黑树.md)
 - [自适应树](./tree/自适应树.md)
 - [堆](./tree/堆.md)
-
+- [Merkle树](./tree/merkle树.md)
 
 ## Graph
 - [图的表示与遍历](./graph/图的遍历与表示.md)
@@ -40,7 +40,7 @@ Data structure and algorithm learning notes and codes.
 
 ## Hash
 - [哈希表原理](./hash/哈希表原理.md)
-
+- [Bloom过滤器](./hash/Bloom过滤器.md)
 
 # Algorithm
 - [算法题目一](./algorithm/算法题目一.md)

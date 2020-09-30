@@ -1,7 +1,7 @@
 # data-structure
 Data structure and algorithm learning notes and codes.
 
-## 数组
+## Array
 - [数组](./array/数组.md)
 
 ## List
@@ -45,6 +45,10 @@ Data structure and algorithm learning notes and codes.
 # Algorithm
 - [算法题目一](./algorithm/算法题目一.md)
 
-## 排序
+## Sort
 - [内排序](./algorithm/sort/排序.md)
 - [堆排序](./algorithm/sort/堆排序.md)
+
+
+## String
+- [字符串匹配](./string/字符串匹配.md)

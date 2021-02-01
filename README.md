@@ -34,7 +34,7 @@ Data structure and algorithm learning notes and codes.
 - [Merkle树](./tree/merkle树.md)
 
 ## Graph
-- [图的表示与遍历](./graph/图的遍历与表示.md)
+- [图的表示与遍历](./graph/图的表示与遍历.md)
 - [Dijkstra算法](./graph/Dijkstra算法.md)
 - [Bellman-Ford算法](./graph/Bellman-Ford算法.md)
 

@@ -42,8 +42,13 @@ Data structure and algorithm learning notes and codes.
 - [哈希表原理](./hash/哈希表原理.md)
 - [Bloom过滤器](./hash/Bloom过滤器.md)
 
+
+---
 # Algorithm
 - [算法题目一](./algorithm/算法题目一.md)
+
+## LRU
+- [LRU算法](./lru/lru-simple/doc/lru.md)
 
 ## Sort
 - [内排序](./algorithm/sort/排序.md)
